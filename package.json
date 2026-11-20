@@ -9,7 +9,7 @@
     "format": "prettier --write .",
     "test": "vitest run",
     "eval": "tsx evals/run.ts",
-    "eval:break": "tsx scripts/break-check.ts",
+    "eval:break": "node --import tsx scripts/break-check.ts",
     "demo": "tsx src/cli/demo.ts",
     "serve": "tsx src/cli/serve.ts",
     "mcp": "tsx src/cli/mcp.ts",
