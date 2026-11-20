@@ -60,10 +60,13 @@ export const CASES_PATH = new URL("./cases.json", import.meta.url);
 const CHECKSUMS_PATH = new URL("./CHECKSUMS.sha256", import.meta.url);
 
 /** Loads the frozen set, refusing if it doesn't match the recorded checksum. */
-export function loadFrozenCases(): EvalCase[] {
-  const bytes = readFileSync(CASES_PATH);
+export function loadFrozenCases(
+  casesPath: URL | string = CASES_PATH,
+  checksumsPath: URL | string = CHECKSUMS_PATH,
+): EvalCase[] {
+  const bytes = readFileSync(casesPath);
   const actual = createHash("sha256").update(bytes).digest("hex");
-  const recorded = readFileSync(CHECKSUMS_PATH, "utf8").split(/\s+/)[0];
+  const recorded = readFileSync(checksumsPath, "utf8").split(/\s+/)[0];
   if (actual !== recorded) {
     throw new Error(
       `evals/cases.json has changed since it was frozen (sha256 ${actual}, recorded ${recorded ?? "none"})`,

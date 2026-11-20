@@ -31,12 +31,14 @@ export interface RunView {
 }
 
 export class UnknownRunError extends Error {}
+export class RunStateError extends Error {}
 
 /** The service: start a run, show drafts, take decisions, send. Used by the HTTP API, the CLI and the evaluation. */
 export class Chaser {
   private readonly graph;
   private readonly now: () => Date;
   private readonly runs = new Set<string>();
+  private readonly deciding = new Set<string>();
 
   constructor(deps: ChaserDeps) {
     this.now = deps.now ?? (() => new Date());
@@ -62,12 +64,19 @@ export class Chaser {
   }
 
   async decide(runId: string, input: unknown): Promise<RunView> {
-    const current = await this.view(runId);
-    if (current.status !== "awaiting_approval")
-      throw new UnknownRunError("run isn't waiting for approval");
     const decisions = DecisionInput.parse(input);
-    await this.graph.invoke(new Command({ resume: decisions }), this.config(runId));
-    return this.view(runId);
+    if (this.deciding.has(runId))
+      throw new RunStateError("a decision for this run is already being processed");
+    this.deciding.add(runId);
+    try {
+      const current = await this.view(runId);
+      if (current.status !== "awaiting_approval")
+        throw new RunStateError("run isn't waiting for approval");
+      await this.graph.invoke(new Command({ resume: decisions }), this.config(runId));
+      return await this.view(runId);
+    } finally {
+      this.deciding.delete(runId);
+    }
   }
 
   async view(runId: string): Promise<RunView> {

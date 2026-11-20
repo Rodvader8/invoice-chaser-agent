@@ -1,4 +1,4 @@
-import { listen, sendJson, type RunningServer } from "./http.js";
+import { listen, sendJson, type RunningServer } from "../http.js";
 import type { Sm8Job } from "./world.js";
 
 /** A stand-in for a ServiceM8-like job system, written for this repo, in memory, read only. */

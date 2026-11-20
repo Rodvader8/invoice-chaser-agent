@@ -1,5 +1,5 @@
 import { dollarsToCents } from "../money.js";
-import { listen, sendJson, type RunningServer } from "./http.js";
+import { listen, sendJson, type RunningServer } from "../http.js";
 import type { XeroContact, XeroInvoice } from "./world.js";
 
 /**

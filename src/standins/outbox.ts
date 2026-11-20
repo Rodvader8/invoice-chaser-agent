@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
-import { listen, readBody, sendJson, type RunningServer } from "./http.js";
+import { listen, readBody, sendJson, type RunningServer } from "../http.js";
 
 /**
  * A stand-in mail and SMS gateway, written for this repo, in memory. Each message carries the
