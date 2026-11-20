@@ -1,0 +1,41 @@
+{
+  "name": "invoice-chaser-agent",
+  "version": "0.1.0",
+  "description": "An agent that drafts overdue-invoice reminders for an Australian trade business; code computes the money, a person approves, sending is lost-reply safe.",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint . && prettier --check .",
+    "format": "prettier --write .",
+    "test": "vitest run",
+    "eval": "tsx evals/run.ts",
+    "eval:break": "tsx scripts/break-check.ts",
+    "demo": "tsx src/cli/demo.ts",
+    "serve": "tsx src/cli/serve.ts",
+    "mcp": "tsx src/cli/mcp.ts",
+    "standins": "tsx src/cli/standins.ts"
+  },
+  "license": "MIT",
+  "type": "module",
+  "dependencies": {
+    "@langchain/core": "1.4.2",
+    "@langchain/langgraph": "1.7.5",
+    "@modelcontextprotocol/sdk": "1.32.2",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@types/node": "24.19.2",
+    "eslint": "10.15.0",
+    "globals": "17.14.0",
+    "prettier": "3.10.1",
+    "tsx": "4.23.15",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.73.0",
+    "vitest": "5.1.1"
+  },
+  "private": true,
+  "engines": {
+    "node": ">=24"
+  }
+}
