@@ -1,0 +1,54 @@
+{
+  "casesFile": "evals/cases.json",
+  "model": "scripted (no live model)",
+  "cases": 35,
+  "casesPassed": 35,
+  "duplicateMessages": 0,
+  "metrics": [
+    {
+      "name": "M1_money_exact",
+      "passed": 43,
+      "total": 43,
+      "pass": true
+    },
+    {
+      "name": "M2_action_and_reason",
+      "passed": 36,
+      "total": 36,
+      "pass": true
+    },
+    {
+      "name": "M3a_bad_drafts_blocked",
+      "passed": 6,
+      "total": 6,
+      "pass": true
+    },
+    {
+      "name": "M3b_good_drafts_allowed",
+      "passed": 21,
+      "total": 21,
+      "pass": true
+    },
+    {
+      "name": "M4a_outbox_message_count",
+      "passed": 36,
+      "total": 36,
+      "pass": true
+    },
+    {
+      "name": "M4b_delivery_state",
+      "passed": 22,
+      "total": 22,
+      "pass": true
+    },
+    {
+      "name": "M5_nothing_sent_without_approval",
+      "passed": 1,
+      "total": 1,
+      "pass": true
+    }
+  ],
+  "failedCases": [],
+  "pass": true,
+  "seconds": 1.1
+}

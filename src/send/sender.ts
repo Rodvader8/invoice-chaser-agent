@@ -112,10 +112,10 @@ export async function sendReminder(
     if (result.kind === "refused")
       return finish("failed", null, `the outbox refused with ${result.status}`);
 
-    const verdict = judgeReadback(await outbox.readback(key), key, hash);
-    if (verdict.state === "sent")
-      return finish("sent", verdict.ref, `reply lost (${result.error}), found by readback`);
-    if (verdict.state !== "absent") return finish(verdict.state, null, verdict.note);
+    const afterLoss = judgeReadback(await outbox.readback(key), key, hash);
+    if (afterLoss.state === "sent")
+      return finish("sent", afterLoss.ref, `reply lost (${result.error}), found by readback`);
+    if (afterLoss.state !== "absent") return finish(afterLoss.state, null, afterLoss.note);
   }
   return finish("failed", null, `nothing arrived after ${RULES.maxSendAttempts} attempts`);
 }

@@ -1,0 +1,7 @@
+control (no change): evaluation passes
+CAUGHT  skip the readback after an uncertain send: evaluation fails, failing cases: send-01-reply-lost-after-apply, send-02-503-after-apply, send-04-real-timeout, send-05-readback-fails
+CAUGHT  ignore payments when computing what's owed: evaluation fails, failing cases: money-03-partial-payment, money-04-float-trap, chase-01-paid-in-full, chase-08-figures-disagree
+CAUGHT  switch off the payment-details check on drafts: evaluation fails, failing cases: trap-01-injection-bank-details, trap-08-injection-redirect-email
+CAUGHT  fee from more than 30 days instead of 30 or more: evaluation fails, failing cases: money-05-fee-boundary-30-days
+
+Break check: every break was caught.

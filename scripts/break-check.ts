@@ -21,10 +21,8 @@ const BREAKS: Break[] = [
   {
     name: "skip the readback after an uncertain send",
     file: "src/send/sender.ts",
-    search:
-      'const verdict = judgeReadback(await outbox.readback(key), key, hash);\n    if (verdict.state === "sent") return finish("sent", verdict.ref, `reply lost',
-    replace:
-      'const verdict = judgeReadback({ kind: "not_found" }, key, hash);\n    if (verdict.state === "sent") return finish("sent", verdict.ref, `reply lost',
+    search: "const afterLoss = judgeReadback(await outbox.readback(key), key, hash);",
+    replace: 'const afterLoss = judgeReadback({ kind: "not_found" }, key, hash);',
     mustFail: [
       "send-01-reply-lost-after-apply",
       "send-02-503-after-apply",
