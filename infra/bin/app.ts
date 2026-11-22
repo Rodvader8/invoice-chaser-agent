@@ -3,7 +3,7 @@ import { InvoiceChaserStack } from "../lib/stack.js";
 
 /**
  * Region-specific, account-agnostic: synthesises with no AWS credentials. The account is
- * filled in at deploy time from whichever profile deploys it (Rod's, after AWS_PLAN.md's steps).
+ * filled in at deploy time from whichever profile deploys it (set up by AWS_PLAN.md's manual steps).
  */
 const app = new App();
 new InvoiceChaserStack(app, "InvoiceChaser", {

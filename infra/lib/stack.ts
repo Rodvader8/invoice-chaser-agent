@@ -15,7 +15,7 @@ import { NodejsFunction, OutputFormat } from "aws-cdk-lib/aws-lambda-nodejs";
 import * as logs from "aws-cdk-lib/aws-logs";
 import type { Construct } from "constructs";
 
-/** The two SecureString parameters Rod creates by hand. The stack only references their names. */
+/** The two SecureString parameters created by hand. The stack only references their names. */
 export const PARAMETER_NAMES = {
   openrouterKey: "/invoice-chaser/openrouter-key",
   apiToken: "/invoice-chaser/api-token",

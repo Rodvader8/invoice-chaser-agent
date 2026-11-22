@@ -6,14 +6,14 @@ Status, 22 Nov 2026: **built and tested locally, not deployed.** The code change
 
 One small stack in **Sydney (`ap-southeast-2`)**, in CDK (TypeScript) at `infra/lib/stack.ts`.
 
-| piece                   | what it does                                                                                                       | sizing and guardrails                                                                                                                                                                  |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **AWS Budgets alert**   | emails Rod when spend crosses a line                                                                               | created by hand **before anything else**: $5 a month, alerts at 50%, 80% and 100% of actual and 100% of forecast. Not in the stack                                                     |
-| **Lambda function**     | runs the same `Chaser` and routes as `npm run serve`, through `src/lambda/handler.ts`                              | `nodejs24.x`, arm64, 512 MB, 30 second timeout, **reserved concurrency of 2**                                                                                                          |
-| **Function URL**        | the HTTPS endpoint                                                                                                 | auth type `NONE`, with the bearer-token check in the code. The token is the only lock, so it's long, random and in Parameter Store                                                     |
-| **DynamoDB table**      | delivery records, run claims, the audit log, model spend, approval checkpoints, and the stand-in outbox's messages | one table, `pk`/`sk`, **provisioned 5 read and 5 write units** (under the always-free 25 and 25), no autoscaling, no indexes, point-in-time recovery off, removal policy destroy       |
-| **SSM Parameter Store** | the OpenRouter key and the API token                                                                               | two `SecureString` parameters, **put there by Rod**. The stack only references their names. The function's role may call `ssm:GetParameters` on those two ARNs and nothing else in SSM |
-| **CloudWatch Logs**     | the function's logs                                                                                                | a log group with **7-day retention** and removal policy destroy                                                                                                                        |
+| piece                   | what it does                                                                                                       | sizing and guardrails                                                                                                                                                                   |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **AWS Budgets alert**   | emails me when spend crosses a line                                                                                | created by hand **before anything else**: $5 a month, alerts at 50%, 80% and 100% of actual and 100% of forecast. Not in the stack                                                      |
+| **Lambda function**     | runs the same `Chaser` and routes as `npm run serve`, through `src/lambda/handler.ts`                              | `nodejs24.x`, arm64, 512 MB, 30 second timeout, **reserved concurrency of 2**                                                                                                           |
+| **Function URL**        | the HTTPS endpoint                                                                                                 | auth type `NONE`, with the bearer-token check in the code. The token is the only lock, so it's long, random and in Parameter Store                                                      |
+| **DynamoDB table**      | delivery records, run claims, the audit log, model spend, approval checkpoints, and the stand-in outbox's messages | one table, `pk`/`sk`, **provisioned 5 read and 5 write units** (under the always-free 25 and 25), no autoscaling, no indexes, point-in-time recovery off, removal policy destroy        |
+| **SSM Parameter Store** | the OpenRouter key and the API token                                                                               | two `SecureString` parameters, **put there by hand**. The stack only references their names. The function's role may call `ssm:GetParameters` on those two ARNs and nothing else in SSM |
+| **CloudWatch Logs**     | the function's logs                                                                                                | a log group with **7-day retention** and removal policy destroy                                                                                                                         |
 
 Tags on everything: `project=invoice-chaser`.
 
@@ -38,7 +38,7 @@ Nothing below has been tried, and none of it can be shown locally.
 - **The deploy itself:** `cdk bootstrap`, `cdk deploy`, and CloudFormation accepting the template.
 - **IAM really working:** that the role can read the two parameters (including decrypting with the AWS-managed `aws/ssm` key, which normally needs no extra KMS permission) and the table, and is refused everything else.
 - **Real Parameter Store:** `SsmSecretSource` has only met a fake client.
-- **Reserved concurrency.** New accounts often start with a low total concurrency quota, and AWS refuses reserved concurrency that would leave less than its minimum unreserved. If the deploy fails on this, the choice is to ask for a quota increase or drop the reservation and rely on the budget alert. That's Rod's call when it happens.
+- **Reserved concurrency.** New accounts often start with a low total concurrency quota, and AWS refuses reserved concurrency that would leave less than its minimum unreserved. If the deploy fails on this, the choice is to ask for a quota increase or drop the reservation and rely on the budget alert. I'll decide that when it happens.
 - **Real cold starts:** start-up time with a 3.7 MB bundle, three in-process stand-ins and the SDK, against the 30 second timeout. Unmeasured.
 - **The function URL from the internet:** auth `NONE` plus the two invoke permissions CDK adds, behaving as expected.
 - **DynamoDB at 5 and 5 units:** throttling under load, and the 400 KB item limit on one checkpoint (fine for the seed data, not checked for large runs).
@@ -46,17 +46,17 @@ Nothing below has been tried, and none of it can be shown locally.
 
 ## Cost
 
-Expected: about $0 a month for the AWS side at demo traffic, plus model spend through OpenRouter, which is capped in code (default $0.05 a run, $0.50 for the project). The deployed function uses the scripted model (`INVOICE_CHASER_LIVE=0`) until Rod decides otherwise.
+Expected: about $0 a month for the AWS side at demo traffic, plus model spend through OpenRouter, which is capped in code (default $0.05 a run, $0.50 for the project). The deployed function uses the scripted model (`INVOICE_CHASER_LIVE=0`) until I decide otherwise.
 
 That rests on the always-free allowances: Lambda (1 million requests and 400,000 GB-seconds a month), DynamoDB (25 read and 25 write units of provisioned capacity, 25 GB), standard Parameter Store parameters, and the CloudWatch Logs free allowance. CDK's bootstrap also creates a small S3 bucket for deployment files, which costs cents at most.
 
 **Check this when the account is created.** AWS changed its free tier for new accounts in mid-2025 (a credit-based free plan for new accounts, alongside the always-free services). I haven't checked the current terms against AWS's own pages, and the budget alert exists because estimates like this one can be wrong.
 
-## Steps only Rod can do
+## Manual steps, outside the code
 
-These need his identity, card or a browser session, so they're his. Nothing in this repo does them.
+These need the account owner's identity, card or a browser session, so they're done by hand. Nothing in this repo does them.
 
-1. **Create the AWS account** at aws.amazon.com with an email address he controls. Pick the plan (free or paid) knowingly.
+1. **Create the AWS account** at aws.amazon.com with an email address you control. Pick the plan (free or paid) knowingly.
 2. **Turn on MFA for the root user** straight away. Don't create access keys for root. After this, root is only for billing and account settings.
 3. **Create the budget alert** (Billing and Cost Management, Budgets): monthly cost budget, $5, email alerts at 50%, 80% and 100% actual and 100% forecast. Turn on free-tier usage alerts too.
 4. **Set up IAM Identity Center** in `ap-southeast-2`, create a user for himself with MFA, and give it a permission set on the account. For a personal sandbox account, `AdministratorAccess` is the practical choice, because CDK's bootstrap creates IAM roles.
@@ -77,11 +77,11 @@ These need his identity, card or a browser session, so they're his. Nothing in t
 
    And the same for `/invoice-chaser/api-token` with a fresh random value of 16 characters or more.
 
-## Then the deploy (with Rod's go-ahead at each gate)
+## Then the deploy (a deliberate go-ahead at each gate)
 
 1. ~~Code changes, with tests, runnable with no AWS account.~~ Done.
-2. ~~`infra/` CDK app and `cdk synth`.~~ Done. Still to do with the account: `cdk diff`, shown to Rod before anything is created.
-3. `cdk bootstrap aws://<account>/ap-southeast-2` once, then `cdk deploy`, both run by Rod or with his explicit OK.
+2. ~~`infra/` CDK app and `cdk synth`.~~ Done. Still to do with the account: `cdk diff`, read in full before anything is created.
+3. `cdk bootstrap aws://<account>/ap-southeast-2` once, then `cdk deploy`, both run by hand, never from CI.
 4. Smoke test: health check, one run, approve, check the outbox messages and the audit log are in the table.
 5. Check the bill the next day, before leaving it running.
 
@@ -93,4 +93,4 @@ Run this in a terminal:
 cd infra && npx cdk destroy --profile invoice-chaser
 ```
 
-The table and the log group have removal policy destroy, so they go with the stack (a test checks both). Two things `cdk destroy` leaves behind: the CDK bootstrap stack (`CDKToolkit`, with its S3 bucket, which has to be emptied before the stack can be deleted in CloudFormation) and the two Parameter Store values (`aws ssm delete-parameter`). The budget alert stays until Rod deletes it, which is fine.
+The table and the log group have removal policy destroy, so they go with the stack (a test checks both). Two things `cdk destroy` leaves behind: the CDK bootstrap stack (`CDKToolkit`, with its S3 bucket, which has to be emptied before the stack can be deleted in CloudFormation) and the two Parameter Store values (`aws ssm delete-parameter`). The budget alert stays until it's deleted by hand, which is fine.

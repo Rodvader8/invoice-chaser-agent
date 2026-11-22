@@ -99,7 +99,7 @@ It can't draft, approve or send, and it doesn't return customer email addresses 
 
 `ScriptedModel` (`src/model/scripted.ts`) reads the facts out of the prompt and writes a template reminder. For the evaluation it can also misbehave on purpose: copy injected notes into the draft, state a wrong total, invent a fee, drop an invoice, return broken JSON once.
 
-`OpenRouterModel` is the live client. It asks for structured JSON output and runs behind `SpendGuard`, which checks a worst-case estimate before every call against a per-run cap, a project cap (stored, so it holds across runs) and an account-balance floor. A call that fails after it was sent is charged at the estimate. The tests drive it with a fake `fetch`. **It hasn't been run against the real API**: Rod hasn't approved spend. A live run needs `OPENROUTER_API_KEY`, `INVOICE_CHASER_MODEL` and the model's prices (`INVOICE_CHASER_PRICE_IN_PER_MTOK`, `_OUT_PER_MTOK`); caps default to $0.05 per run, $0.50 for the project and a $1 balance floor.
+`OpenRouterModel` is the live client. It asks for structured JSON output and runs behind `SpendGuard`, which checks a worst-case estimate before every call against a per-run cap, a project cap (stored, so it holds across runs) and an account-balance floor. A call that fails after it was sent is charged at the estimate. The tests drive it with a fake `fetch`. **It hasn't been run against the real API yet.** A live run needs `OPENROUTER_API_KEY`, `INVOICE_CHASER_MODEL` and the model's prices (`INVOICE_CHASER_PRICE_IN_PER_MTOK`, `_OUT_PER_MTOK`); caps default to $0.05 per run, $0.50 for the project and a $1 balance floor.
 
 ## What was measured
 
@@ -131,7 +131,7 @@ All 35 cases pass. The traps include prompt injection in an invoice note (swap t
 
 The break check also refuses a break that no longer matches the code. That mattered once already: after the code was reformatted, the readback break silently stopped applying, the check reported it as out of date instead of passing, and the break was fixed (the two commits before that fix carry the stale version).
 
-For the unit tests, I mutated the readback, the payment-details call and the approval binding by hand, one at a time: 7, 2 and 1 tests went red respectively, and all 77 tests the repo had then passed again once the code was restored.
+For the unit tests, the readback, the payment-details call and the approval binding were each mutated by hand, one at a time: 7, 2 and 1 tests went red respectively, and all 77 tests the repo had then passed again once the code was restored.
 
 **How much this shows.** The model is scripted, so these numbers measure the code around a model, not a model. They say the rules are applied exactly, bad drafts of the kinds tested are stopped, and sending survives the faults tested. They don't say how well a real model writes a reminder, how often it would trip the checks, or how customers would respond. The same author wrote the rules, the cases and the code, so a mistake nobody thought of won't be in the set.
 

@@ -4,7 +4,7 @@ Written 20 Nov 2026, before any of the system's code existed. This file, `evals/
 
 ## What this evaluation can and can't answer
 
-Every run uses a **scripted fake model**, not a real one. The fake is told, per case, to behave well or to misbehave in a specific way (state a wrong figure, invent a fee, copy an injected instruction into the draft). So this evaluation measures the **code around the model**: the money it computes, the decisions it makes about who to chase, the checks it runs on a draft before a person sees it, and how it sends. It says nothing about how well a real model writes a reminder. That needs a live run, and Rod hasn't approved spend.
+Every run uses a **scripted fake model**, not a real one. The fake is told, per case, to behave well or to misbehave in a specific way (state a wrong figure, invent a fee, copy an injected instruction into the draft). So this evaluation measures the **code around the model**: the money it computes, the decisions it makes about who to chase, the checks it runs on a draft before a person sees it, and how it sends. It says nothing about how well a real model writes a reminder. That needs a live run, which hasn't been done yet.
 
 The same author wrote the rules, the cases and the code. That's a real weakness: a case can only catch a mistake the author thought of. The deliberate-break check (below) is the partial answer. It changes the code in ways that should break it and confirms the evaluation notices.
 
