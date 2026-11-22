@@ -1,0 +1,12 @@
+control (no change): guardrail tests pass
+CAUGHT  memory 1024 MB
+CAUGHT  x86_64 instead of arm64
+CAUGHT  no reserved concurrency
+CAUGHT  on-demand table
+CAUGHT  autoscaling added
+CAUGHT  logs kept a month
+CAUGHT  table retained on destroy
+CAUGHT  SSM wildcard
+CAUGHT  IAM auth on the URL
+
+Infra drift check: every drift was caught.

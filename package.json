@@ -13,7 +13,12 @@
     "demo": "tsx src/cli/demo.ts",
     "serve": "tsx src/cli/serve.ts",
     "mcp": "tsx src/cli/mcp.ts",
-    "standins": "tsx src/cli/standins.ts"
+    "standins": "tsx src/cli/standins.ts",
+    "cdk:synth": "cd infra && CDK_DISABLE_CLI_TELEMETRY=true AWS_EC2_METADATA_DISABLED=true cdk synth --no-notices --quiet",
+    "dynamodb:start": "docker run -d --rm --name invoice-chaser-dynamodb -p 127.0.0.1:8000:8000 amazon/dynamodb-local@sha256:6ada631ec7aa5fc83446855eb17233e3dad184fec47477e8140c6c569cfe0c86",
+    "dynamodb:stop": "docker stop invoice-chaser-dynamodb",
+    "test:dynamodb": "REQUIRE_DYNAMODB=1 vitest run",
+    "infra:drift": "node --import tsx scripts/infra-drift-check.ts"
   },
   "license": "MIT",
   "type": "module",

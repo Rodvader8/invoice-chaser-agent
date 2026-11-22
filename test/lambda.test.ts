@@ -10,11 +10,8 @@ import { SsmSecretSource, type SecretSource } from "../src/lambda/secrets.js";
 import { ScriptedModel } from "../src/model/scripted.js";
 import { DynamoDbMessageLog } from "../src/standins/dynamodb-log.js";
 import type { MessageLog, OutboxMessage } from "../src/standins/outbox.js";
-import {
-  DynamoDbCheckpointKv,
-  KvCheckpointSaver,
-  SqliteCheckpointKv,
-} from "../src/storage/checkpoint.js";
+import { DynamoDbCheckpointKv, KvCheckpointSaver } from "../src/storage/checkpoint.js";
+import { SqliteCheckpointKv } from "../src/storage/checkpoint-sqlite.js";
 import { DynamoDbStore } from "../src/storage/dynamodb.js";
 import { SqliteStore } from "../src/storage/sqlite.js";
 import { dynamoAvailable, dynamoLabel, freshTable, localDoc } from "./dynamo.js";

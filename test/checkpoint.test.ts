@@ -19,9 +19,9 @@ import { OutboxStandIn } from "../src/standins/outbox.js";
 import {
   DynamoDbCheckpointKv,
   KvCheckpointSaver,
-  SqliteCheckpointKv,
   type CheckpointKv,
 } from "../src/storage/checkpoint.js";
+import { SqliteCheckpointKv } from "../src/storage/checkpoint-sqlite.js";
 import { DynamoDbStore } from "../src/storage/dynamodb.js";
 import { SqliteStore } from "../src/storage/sqlite.js";
 import type { Store } from "../src/storage/types.js";

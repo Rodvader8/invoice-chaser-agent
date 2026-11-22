@@ -28,9 +28,23 @@ async function probe(): Promise<boolean> {
   }
 }
 
-export const dynamoAvailable = await probe();
-if (!dynamoAvailable && process.env.REQUIRE_DYNAMODB === "1") {
-  throw new Error(`REQUIRE_DYNAMODB=1 but nothing answers at ${DYNAMODB_ENDPOINT}`);
+const required = process.env.REQUIRE_DYNAMODB === "1";
+
+/** Required: wait up to 20 seconds (a fresh container takes a moment to listen). Otherwise: one quick check. */
+async function waitForDynamo(): Promise<boolean> {
+  const deadline = Date.now() + (required ? 20_000 : 0);
+  for (;;) {
+    if (await probe()) return true;
+    if (Date.now() >= deadline) return false;
+    await new Promise((resolve) => setTimeout(resolve, 500));
+  }
+}
+
+export const dynamoAvailable = await waitForDynamo();
+if (!dynamoAvailable && required) {
+  throw new Error(
+    `REQUIRE_DYNAMODB=1 but nothing answered at ${DYNAMODB_ENDPOINT} within 20 seconds`,
+  );
 }
 
 export function dynamoLabel(name: string): string {
