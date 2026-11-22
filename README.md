@@ -146,11 +146,12 @@ For the unit tests, the readback, the payment-details call and the approval bind
 - **No editing.** The person approves or rejects a draft; they can't edit it here.
 - **`reconcile()` is a function,** not a scheduled job or an API route.
 - **Not deployed.** The Lambda, DynamoDB and CDK code is tested offline only. Nothing has run on AWS.
-- **CI hasn't run.** `.github/workflows/ci.yml` (lint, types, tests, evaluation, break check, build, audit; actions pinned by commit, read-only permissions) runs only once the repo is pushed to GitHub.
 
 ## Stack
 
 Node 24, TypeScript 6.0 in strict mode (7.0 is out, but typescript-eslint doesn't support it yet), LangGraph.js, zod 4, the official MCP TypeScript SDK, Vitest, ESLint (typescript-eslint strict type-checked) and Prettier. AWS side: the AWS SDK v3 (DynamoDB, SSM) and CDK v2 (a dev dependency). Runtime dependencies: eight.
+
+CI (`.github/workflows/ci.yml`, actions pinned by commit, read-only permissions) runs lint, types, tests, the evaluation, the break check, `cdk synth`, the build and a dependency audit on every push, and a second job runs every test against DynamoDB Local.
 
 ## AWS on paper and offline
 
