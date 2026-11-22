@@ -17,7 +17,10 @@ export interface ChaserDeps {
   store: Store;
   business?: Business;
   now?: () => Date;
-  /** Defaults to in-memory: a pending approval is lost if the process restarts. */
+  /**
+   * Where a run waiting for approval is kept. Defaults to in-memory (lost on restart);
+   * KvCheckpointSaver persists it in SQLite or DynamoDB.
+   */
   checkpointer?: BaseCheckpointSaver;
 }
 
@@ -37,11 +40,11 @@ export class RunStateError extends Error {}
 export class Chaser {
   private readonly graph;
   private readonly now: () => Date;
-  private readonly runs = new Set<string>();
-  private readonly deciding = new Set<string>();
+  private readonly store: Store;
 
   constructor(deps: ChaserDeps) {
     this.now = deps.now ?? (() => new Date());
+    this.store = deps.store;
     this.graph = buildGraph(
       {
         accounting: deps.accounting,
@@ -58,30 +61,32 @@ export class Chaser {
 
   async start(asOf?: string): Promise<RunView> {
     const runId = randomUUID();
-    this.runs.add(runId);
     await this.graph.invoke({ runId, asOf: asOf ?? sydneyDate(this.now()) }, this.config(runId));
     return this.view(runId);
   }
 
   async decide(runId: string, input: unknown): Promise<RunView> {
     const decisions = DecisionInput.parse(input);
-    if (this.deciding.has(runId))
-      throw new RunStateError("a decision for this run is already being processed");
-    this.deciding.add(runId);
+    const current = await this.view(runId);
+    if (current.status !== "awaiting_approval") {
+      throw new RunStateError("run isn't waiting for approval");
+    }
+    // A stored conditional write, so only one caller resumes a run, even across processes.
+    if (!(await this.store.claimRun(runId))) {
+      throw new RunStateError("a decision for this run has already been taken");
+    }
     try {
-      const current = await this.view(runId);
-      if (current.status !== "awaiting_approval")
-        throw new RunStateError("run isn't waiting for approval");
       await this.graph.invoke(new Command({ resume: decisions }), this.config(runId));
       return await this.view(runId);
-    } finally {
-      this.deciding.delete(runId);
+    } catch (err) {
+      await this.store.releaseRun(runId);
+      throw err;
     }
   }
 
   async view(runId: string): Promise<RunView> {
-    if (!this.runs.has(runId)) throw new UnknownRunError("no such run");
     const state = await this.graph.getState(this.config(runId));
+    if (Object.keys(state.values as object).length === 0) throw new UnknownRunError("no such run");
     const values = state.values as { drafts?: PendingDraft[]; outcomes?: CustomerOutcome[] };
     const waiting = state.next.includes("approve");
     return {

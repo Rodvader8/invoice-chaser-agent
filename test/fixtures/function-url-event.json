@@ -1,0 +1,36 @@
+{
+  "version": "2.0",
+  "routeKey": "$default",
+  "rawPath": "/runs",
+  "rawQueryString": "",
+  "headers": {
+    "content-type": "application/json",
+    "authorization": "Bearer PLACEHOLDER_SET_BY_TEST",
+    "host": "exampleurlid.lambda-url.ap-southeast-2.on.aws",
+    "user-agent": "curl/8.5.0",
+    "x-amzn-trace-id": "Root=1-00000000-000000000000000000000000",
+    "x-forwarded-for": "203.0.113.10",
+    "x-forwarded-port": "443",
+    "x-forwarded-proto": "https"
+  },
+  "requestContext": {
+    "accountId": "anonymous",
+    "apiId": "exampleurlid",
+    "domainName": "exampleurlid.lambda-url.ap-southeast-2.on.aws",
+    "domainPrefix": "exampleurlid",
+    "http": {
+      "method": "POST",
+      "path": "/runs",
+      "protocol": "HTTP/1.1",
+      "sourceIp": "203.0.113.10",
+      "userAgent": "curl/8.5.0"
+    },
+    "requestId": "00000000-0000-4000-8000-000000000000",
+    "routeKey": "$default",
+    "stage": "$default",
+    "time": "22/Nov/2026:01:00:00 +0000",
+    "timeEpoch": 1795309200000
+  },
+  "body": "eyJhc09mIjoiMjAyNi0xMS0yMCJ9",
+  "isBase64Encoded": true
+}

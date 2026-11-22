@@ -1,26 +1,16 @@
-import { readFileSync } from "node:fs";
-import { z } from "zod";
 import { AccountingClient } from "../clients/accounting.js";
 import { JobsClient } from "../clients/jobs.js";
 import type { RunningServer } from "../http.js";
-import { OpenRouterModel, openRouterBalanceUsd } from "../model/openrouter.js";
-import { ScriptedModel } from "../model/scripted.js";
-import { SpendGuard } from "../model/spend.js";
+import { makeModel as makeModelWith } from "../model/factory.js";
 import type { ChatModel } from "../model/types.js";
+import { loadSeed } from "../seed.js";
 import { OutboxClient } from "../send/outbox-client.js";
 import { AccountingStandIn } from "../standins/accounting.js";
 import { JobsStandIn } from "../standins/jobs.js";
 import { OutboxStandIn } from "../standins/outbox.js";
-import { World } from "../standins/world.js";
 import type { Store } from "../storage/types.js";
 
-export const Seed = World.extend({ asOf: z.string() });
-
-export function loadSeed(): z.infer<typeof Seed> {
-  return Seed.parse(
-    JSON.parse(readFileSync(new URL("../../data/seed.json", import.meta.url), "utf8")),
-  );
-}
+export { loadSeed } from "../seed.js";
 
 export interface Connections {
   accounting: AccountingClient;
@@ -67,41 +57,11 @@ export async function connect(ports: [number, number, number] = [0, 0, 0]): Prom
   };
 }
 
-function numberFromEnv(name: string, fallback?: number): number {
-  const raw = process.env[name];
-  if (raw === undefined || raw === "") {
-    if (fallback === undefined) throw new Error(`set ${name}`);
-    return fallback;
-  }
-  const value = Number(raw);
-  if (!Number.isFinite(value) || value <= 0) throw new Error(`${name} must be a positive number`);
-  return value;
-}
-
-/**
- * The scripted model unless `live` is true. A live model needs OPENROUTER_API_KEY,
- * INVOICE_CHASER_MODEL and the model's prices, and runs under hard spend caps.
- */
+/** The scripted model unless `live`; a live one reads OPENROUTER_API_KEY from the environment. */
 export function makeModel(store: Store, live: boolean): ChatModel {
-  if (!live) return new ScriptedModel("faithful");
-  const apiKey = process.env.OPENROUTER_API_KEY ?? "";
-  const model = process.env.INVOICE_CHASER_MODEL ?? "";
-  if (!apiKey || !model)
-    throw new Error("a live run needs OPENROUTER_API_KEY and INVOICE_CHASER_MODEL");
-  const guard = new SpendGuard(
-    {
-      runCapUsd: numberFromEnv("INVOICE_CHASER_RUN_CAP_USD", 0.05),
-      projectCapUsd: numberFromEnv("INVOICE_CHASER_PROJECT_CAP_USD", 0.5),
-      accountFloorUsd: numberFromEnv("INVOICE_CHASER_ACCOUNT_FLOOR_USD", 1),
-    },
-    store,
-    () => openRouterBalanceUsd(apiKey),
-  );
-  return new OpenRouterModel({
-    apiKey,
-    model,
-    priceInPerMTok: numberFromEnv("INVOICE_CHASER_PRICE_IN_PER_MTOK"),
-    priceOutPerMTok: numberFromEnv("INVOICE_CHASER_PRICE_OUT_PER_MTOK"),
-    guard,
+  return makeModelWith(store, {
+    live,
+    apiKey: process.env.OPENROUTER_API_KEY ?? "",
+    env: process.env,
   });
 }

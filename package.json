@@ -18,14 +18,23 @@
   "license": "MIT",
   "type": "module",
   "dependencies": {
+    "@aws-sdk/client-dynamodb": "3.1175.0",
+    "@aws-sdk/client-ssm": "3.1175.0",
+    "@aws-sdk/lib-dynamodb": "3.1175.0",
     "@langchain/core": "1.4.2",
     "@langchain/langgraph": "1.7.5",
+    "@langchain/langgraph-checkpoint": "1.2.3",
     "@modelcontextprotocol/sdk": "1.32.2",
     "zod": "4.6.7"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
+    "@types/aws-lambda": "8.10.164",
     "@types/node": "24.19.2",
+    "aws-cdk": "2.1149.0",
+    "aws-cdk-lib": "2.278.0",
+    "constructs": "10.8.1",
+    "esbuild": "0.28.2",
     "eslint": "10.15.0",
     "globals": "17.14.0",
     "prettier": "3.10.1",

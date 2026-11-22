@@ -17,6 +17,10 @@ export default tseslint.config(
         "error",
         { ignoreVoidReturningFunctions: true },
       ],
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        { argsIgnorePattern: "^_", ignoreRestSiblings: true },
+      ],
       "no-console": "off",
     },
   },

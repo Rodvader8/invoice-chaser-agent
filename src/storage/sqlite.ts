@@ -29,6 +29,10 @@ CREATE TABLE IF NOT EXISTS audit (
   contact_id TEXT,
   detail TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS run_claims (
+  run_id TEXT PRIMARY KEY,
+  claimed_at TEXT NOT NULL
+);
 CREATE TABLE IF NOT EXISTS spend (
   seq INTEGER PRIMARY KEY AUTOINCREMENT,
   at TEXT NOT NULL,
@@ -189,6 +193,18 @@ export class SqliteStore implements Store {
       total: number;
     };
     return Promise.resolve(row.total);
+  }
+
+  claimRun(runId: string): Promise<boolean> {
+    const result = this.db
+      .prepare("INSERT OR IGNORE INTO run_claims (run_id, claimed_at) VALUES (?, ?)")
+      .run(runId, this.now().toISOString());
+    return Promise.resolve(result.changes === 1);
+  }
+
+  releaseRun(runId: string): Promise<void> {
+    this.db.prepare("DELETE FROM run_claims WHERE run_id = ?").run(runId);
+    return Promise.resolve();
   }
 
   close(): void {

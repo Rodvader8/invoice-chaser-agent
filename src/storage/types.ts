@@ -30,8 +30,9 @@ export interface AuditEvent {
 export class DuplicateDeliveryError extends Error {}
 
 /**
- * Where idempotency records, the audit log and model spend live. SqliteStore is the local
- * implementation; storage/dynamodb.ts describes the planned AWS one (not built).
+ * Where idempotency records, the audit log, model spend and run claims live. SqliteStore is the
+ * local implementation; DynamoDbStore (storage/dynamodb.ts) is the AWS one. Both pass the same
+ * contract tests (test/store-contract.ts).
  */
 export interface Store {
   getDelivery(key: string): Promise<DeliveryRecord | null>;
@@ -43,5 +44,12 @@ export interface Store {
   listAudit(runId?: string): Promise<AuditEvent[]>;
   addSpend(usd: number, model: string, purpose: string): Promise<void>;
   totalSpendUsd(): Promise<number>;
+  /**
+   * Claims the right to resume a run. A conditional write: true for exactly one caller, even
+   * across processes, so two people approving at once can't both resume the same run.
+   */
+  claimRun(runId: string): Promise<boolean>;
+  /** Gives the claim back, so a resume that failed part way can be tried again. */
+  releaseRun(runId: string): Promise<void>;
   close(): void;
 }

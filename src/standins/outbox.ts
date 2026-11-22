@@ -32,8 +32,15 @@ const Incoming = z.object({
   body: z.string().min(1).max(5000),
 });
 
+/** Where the outbox keeps messages beyond this process (DynamoDB on Lambda, so readbacks survive a cold start). */
+export interface MessageLog {
+  append(message: OutboxMessage): Promise<void>;
+  byRef(clientRef: string): Promise<OutboxMessage[]>;
+}
+
 export interface OutboxOptions {
   dedupe?: boolean;
+  log?: MessageLog;
   postFaults?: PostFault[];
   getFaults?: GetFault[];
   stallMs?: number;
@@ -47,12 +54,18 @@ export class OutboxStandIn {
   private readonly getFaults: GetFault[];
   private readonly dedupe: boolean;
   private readonly stallMs: number;
+  private readonly log: MessageLog | undefined;
+
+  private async byRef(ref: string): Promise<OutboxMessage[]> {
+    return this.log ? this.log.byRef(ref) : this.messages.filter((m) => m.clientRef === ref);
+  }
 
   constructor(options: OutboxOptions = {}) {
     this.dedupe = options.dedupe ?? false;
     this.postFaults = [...(options.postFaults ?? [])];
     this.getFaults = [...(options.getFaults ?? [])];
     this.stallMs = options.stallMs ?? 2000;
+    this.log = options.log;
   }
 
   start(port = 0): Promise<RunningServer> {
@@ -62,7 +75,7 @@ export class OutboxStandIn {
         if (fault === "drop") return void req.socket.destroy();
         if (fault === "error_500") return sendJson(res, 500, { error: "injected" });
         const ref = url.searchParams.get("clientRef") ?? "";
-        return sendJson(res, 200, { messages: this.messages.filter((m) => m.clientRef === ref) });
+        return sendJson(res, 200, { messages: await this.byRef(ref) });
       }
       if (req.method !== "POST" || url.pathname !== "/messages") return sendJson(res, 404, {});
 
@@ -78,7 +91,7 @@ export class OutboxStandIn {
       const parsed = Incoming.safeParse(JSON.parse(await readBody(req)));
       if (!parsed.success) return sendJson(res, 400, { error: "bad message" });
 
-      let message = this.dedupe ? this.messages.find((m) => m.clientRef === clientRef) : undefined;
+      let message = this.dedupe ? (await this.byRef(clientRef))[0] : undefined;
       if (message) {
         const same =
           message.channel === parsed.data.channel &&
@@ -89,6 +102,7 @@ export class OutboxStandIn {
       } else {
         message = { id: randomUUID(), clientRef, ...parsed.data };
         this.messages.push(message);
+        await this.log?.append(message);
       }
 
       if (fault === "apply_then_drop") return void req.socket.destroy();

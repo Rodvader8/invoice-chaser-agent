@@ -1,7 +1,10 @@
 import { RULES } from "../config.js";
-import type { Store } from "../storage/types.js";
+import { DuplicateDeliveryError, type Store } from "../storage/types.js";
 import { contentHash, type OutgoingContent } from "./keys.js";
 import type { Outbox, ReadbackResult, StoredMessage } from "./outbox-client.js";
+
+/** Longer than three attempts with their timeouts and readbacks. A "sending" record older than this was left by a crash. */
+export const SENDING_LEASE_MS = 120_000;
 
 export type SendState = "sent" | "failed" | "unknown" | "conflict" | "already_sent";
 
@@ -75,6 +78,21 @@ export async function sendReminder(
     };
   }
 
+  const elsewhere = (note: string): SendResult => ({
+    state: "unknown",
+    attempts,
+    outboxRef: null,
+    note,
+  });
+
+  if (
+    existing?.state === "sending" &&
+    now().getTime() - Date.parse(existing.updatedAt) < SENDING_LEASE_MS
+  ) {
+    // Another process is in the middle of sending this reminder. Leave it alone.
+    return elsewhere("another process is sending this reminder; settle it later with reconcile");
+  }
+
   if (existing) {
     // An earlier run didn't finish cleanly. Ask the outbox before doing anything.
     const verdict = judgeReadback(await outbox.readback(key), key, hash);
@@ -83,19 +101,27 @@ export async function sendReminder(
     if (verdict.state !== "absent") return finish(verdict.state, null, verdict.note);
   } else {
     const stamp = now().toISOString();
-    await store.insertDelivery({
-      key,
-      contactId: request.contactId,
-      channel: content.channel,
-      recipient: content.to,
-      contentHash: hash,
-      state: "sending",
-      attempts: 0,
-      outboxRef: null,
-      lastError: null,
-      createdAt: stamp,
-      updatedAt: stamp,
-    });
+    try {
+      await store.insertDelivery({
+        key,
+        contactId: request.contactId,
+        channel: content.channel,
+        recipient: content.to,
+        contentHash: hash,
+        state: "sending",
+        attempts: 0,
+        outboxRef: null,
+        lastError: null,
+        createdAt: stamp,
+        updatedAt: stamp,
+      });
+    } catch (err) {
+      // The conditional insert lost a race: another process owns this delivery.
+      if (err instanceof DuplicateDeliveryError) {
+        return elsewhere("another process started sending this reminder first");
+      }
+      throw err;
+    }
   }
 
   for (let tries = 1; tries <= RULES.maxSendAttempts; tries++) {

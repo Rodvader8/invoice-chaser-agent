@@ -68,12 +68,12 @@ npm run serve
 
 Everything except `/health` needs `Authorization: Bearer <token>`, compared in constant time. There are no user accounts, so the reviewer name is typed in, not authenticated.
 
-| setting                                    | meaning                                                                                                |
-| ------------------------------------------ | ------------------------------------------------------------------------------------------------------ |
-| `INVOICE_CHASER_API_TOKEN`                 | bearer token for the API, 16+ characters; the server won't start without it                            |
-| `INVOICE_CHASER_PORT`, `INVOICE_CHASER_DB` | default 8787 and `invoice-chaser.db`                                                                   |
-| `ACCOUNTING_URL`, `JOBS_URL`, `OUTBOX_URL` | point at running stand-ins (`npm run standins`); if unset, they start in-process with `data/seed.json` |
-| `INVOICE_CHASER_LIVE=1` / `--live`         | use a real model through OpenRouter instead of the scripted one (see below)                            |
+| setting                                    | meaning                                                                                               |
+| ------------------------------------------ | ----------------------------------------------------------------------------------------------------- |
+| `INVOICE_CHASER_API_TOKEN`                 | bearer token for the API, 16+ characters; the server won't start without it                           |
+| `INVOICE_CHASER_PORT`, `INVOICE_CHASER_DB` | default 8787 and `invoice-chaser.db`                                                                  |
+| `ACCOUNTING_URL`, `JOBS_URL`, `OUTBOX_URL` | point at running stand-ins (`npm run standins`); if unset, they start in-process with `src/seed.json` |
+| `INVOICE_CHASER_LIVE=1` / `--live`         | use a real model through OpenRouter instead of the scripted one (see below)                           |
 
 ## MCP server
 
