@@ -103,7 +103,7 @@ It can't draft, approve or send, and it doesn't return customer email addresses 
 
 ## What was measured
 
-Pre-registered first: the questions, the rules, the 35 cases and the pass criteria were committed together (commit `4372fdf`) before any system code existed. The set's SHA-256 is in `evals/CHECKSUMS.sha256` and the runner refuses to score a changed set (a test edits one figure in a copy and checks it's refused).
+Pre-registered first: the questions, the rules, the 35 cases and the pass criteria were committed together (the first commit, `fbd0c46`) before any system code existed. The set's SHA-256 is in `evals/CHECKSUMS.sha256` and the runner refuses to score a changed set (a test edits one figure in a copy and checks it's refused).
 
 Result of `npm run eval` (saved in `evals/results/offline.json`):
 
